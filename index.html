@@ -136,15 +136,48 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
     <li>Frame subtraction</li> 
   </ul>
 
+  These attempted changes were what we thought had the best chance of success of making the videos smoother, and reduce the flickering effect.
   <br><br>
-    
-
   <h4>Part 2: Training Time Improvements</h4>
+
+  TODO: AUSTEN PLEASE WRITE ABOUT WHAT YOUR APPROACH WAS
+
 
 <br><br>
 <!-- Experiments and Results -->
 <h2><u>Experiments and Results</u></h3>
   <br><br>
+
+  <h4>Part 1: Smoother Videos</h4>
+  <h5>Gaussian Filtering</h5>
+  <h5>Interpolation of video (predicting frames between frames)</h5>
+  <h5>Frame subtraction</h5>
+
+  <div style = "text-align: center">
+      <figure>
+        <video width="320" height="320" autoplay loop>
+            <source src="images/fox_control_udnie.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        <figcaption>Original</figcaption>
+      <figure>
+    </div>
+
+  <div style = "text-align: center">
+      <figure>
+          <video width="320" height="320" autoplay loop>
+              <source src="images/fox_use_prev_udnie.mp4" type= "video/mp4">
+            Your browser does not support the video tag.
+          </video>
+          <video width="320" height="320" autoplay loop>
+              <source src="images/fox_use_prev_udnie2.mp4" type= "video/mp4">
+            Your browser does not support the video tag.
+          </video>
+          <figcaption>Left: Using previous stylized frame without overlay | Right: Using previous stylized frame with overlay</figcaption>
+      </figure>
+
+    </div>
+  
 
 <h2><u>Future Work</u></h2>
 <br><br>
