@@ -146,10 +146,45 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
 <br><br>
 <!-- Experiments and Results -->
 <h2><u>Experiments and Results</u></h3>
-  <br><br>
-
   <h4>Part 1: Smoother Videos</h4>
   <h5>Gaussian Filtering</h5>
+  <div style = "text-align: center">
+      <figure>
+        <video width="320" height="320" autoplay loop>
+            <source src="images/fox_control_udnie.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        <figcaption>Original</figcaption>
+      <figure>
+    </div>
+
+  <div style = "text-align: center">
+      <figure>
+          <video width="320" height="320" autoplay loop>
+              <source src="images/fox_gauss_1.0.mp4" type= "video/mp4">
+            Your browser does not support the video tag.
+          </video>
+          <video width="320" height="320" autoplay loop>
+              <source src="images/fox_gauss_2.0.mp4" type= "video/mp4">
+            Your browser does not support the video tag.
+          </video>
+          <video width="320" height="320" autoplay loop>
+              <source src="images/fox_gauss_3.0.mp4" type= "video/mp4">
+            Your browser does not support the video tag.
+          </video>
+          <figcaption>Left: Sigma = 1.0 | Center: Sigma = 2.0 | Right: Sigma = 3.0</figcaption>
+      </figure>
+
+    </div>
+    <br>
+
+    A first, rudimentary attempt to get a smoother video was to apply gaussian filtering to the images after passing through the stylization.
+    This would ideally create a smoother intepretation of the background vs the fox, and would result in a more pleasing image. However,
+    the reality was that this attempt did nothing to make the frames less jittery, and only sreved to blur the coloring in the videos.
+    This makes sense, as gaussian filtering does nothing to take into account the way that the neural net styles images. This was when we
+    first thought that the key to getting stable videos may lie in the actual training of the neural net, but regardless we pushed onwards to test the other
+    theories we had.
+
   <h5>Interpolation of video (predicting frames between frames)</h5>
   <h5>Frame subtraction</h5>
 
@@ -177,12 +212,65 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
       </figure>
 
     </div>
-  
 
-<h2><u>Future Work</u></h2>
+    <br>
+
+    For this approach, we attempted to use the previous frame of the video to help make intelligent decisions about the next frame in the video.
+    There were two main attempts to do this, as shown by the results in the left and right videos:
+    <br><br>
+    <ul>
+            <li>Using unedited stylized frame as previous frame</li>
+            <br>
+            For this attempt, we created the first frame of the stylized video as normal. 
+            Then, for every successive frame, we calculated the difference in pixel values 
+            based on a threshold between the content frames in the original video. This can be 
+            thought of as similar to background subtraction, but less complex. Next, we found the pixels
+            that had changed from frame to frame, and overlayed the previous stylized frame on the current stylized frame where
+            we determined that the frames had not changed. Finally, we set the last stylized frame to 
+            the UNEDITED stylized frame. That is, the frame in the resulting video and the frame used
+            as the previous frame are different, with the video containing a frame that contains both elements of the 
+            previous frame and the stylized frame of the original video, and the frame used for reference in calculation
+            being the non-overlayed stylized frame. This resulted in a fairly smooth video, with flickering that is slightly less noticable
+            than in the original video. However, there is no marked improvement, and we continued on to the second approach.
+
+            <br><br>
+            <li>Using edited stylized frame as previous frame</li>
+            <br>
+
+            For this second attempt, we had some serious doubts. For example, when using the edited
+            stylized frame as a reference point for future frame replacement, there is the danger of 
+            compounding errors. For example, if a pixel is calculated as different between frames when in reality it 
+            isn't, or the reverse, that error will be propogated throughout the whole video. To combat this, the threshold used
+            to find difference is the mean of the difference matrix. This results in a video where the fox, the main source of
+            movement, to be very well captured, while the background seems less consistent. This is because
+            the background is less consistently found as "changed", and what few instances there are change for make for 
+            and interesting "popping" effect
+
+
+            
+    </ul>
+  
+    <h4>Part 2: Training Time Improvements</h4>
+
+    TODO: AUSTEN PLEASE WRITE ABOUT WHAT YOUR RESULTS WERE
+<h2><u>Conclusions and Future Work</u></h2>
+  <h4>Part 1: Smoother Videos</h4>
+
+  As it turns out, none of our experiments were particularly successful. While the frame subtraction had the best chance of success, and had the best results,
+  they did not markedly improve the style transfer for the video. Howver, we did stumble upon a possible plan that could work very well
+  if we had had more time. During training of the neural net, there are three losses that are minimized: Content loss, style loss, and total variance loss. These
+  combined are what make the balance between content and style in the produced images. However, with videos, another loss component can be added to try and minimize
+  the effect of stylization between frames: noise loss. For example, different frames in a video contain only small difference, which can essentially be treated
+  as noise. If, during training, we could calculate both the styled image with and without noise, and minimize the loss between those two images, the neural net would be
+  much better suited to create stylized videos where there is less flickering between frames, as the background/non-moving portions of the frames would be more consistent.
+  Unfortunately, due to time constraints and high training times, we could not test this implementation. However, we did work on reducing training times for style models,
+  which would have helped us achieve this goal.
+  <br>
+  <h4>Part 2: Training Time Improvements</h4>
+
 <br><br>
-<h2><u>Conclusion</u></h2>
-<br><br>
+
+
 
 
 <br><br><br>
