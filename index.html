@@ -186,8 +186,41 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
     theories we had.
 
   <h5>Interpolation of video (predicting frames between frames)</h5>
+  <div style = "text-align: center">
+    <figure>
+      <video width="320" height="200" autoplay loop>
+        <source src="images/fox_regularspeed_original_corrected.mp4" type= "video/mp4">
+      Your browser does not support the video tag.
+    </video>
+      <figcaption>Original</figcaption>
+    <figure>
+  </div>
+
+  <div style = "text-align: center">
+    <figure>
+        <video width="320" height="200" autoplay loop>
+            <source src="images/fox_regularspeed_corrected.mp4" type= "video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        <video width="320" height="200" autoplay loop>
+            <source src="images/fox_halfspeed_corrected.mp4" type= "video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        <video width="320" height="200" autoplay loop>
+            <source src="images/fox_quarterspeed_corrected.mp4" type= "video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        <figcaption>Left: Original Number of Frames Result | Center: Double the Frames by Interpolation Result | Right: Quadruple the Frames by Interpolation Result</figcaption>
+    </figure>
+  </div>
   <br>
-  TODO: NOAH ADD IN YOUR RESULTS
+    This result was obtained by increasing the number of frames in the original video through
+     frame interpolation and running the video with extra frames throught the transformation network. The 
+     goal was that the extra frames might reduce or smooth the flickering between frames by reducing the difference 
+     between frames and making the overall video seem less jumpy.
+     This was successful to a degree. The flickering is smoother as there are smaller changes between frames, however, 
+     there is still just as much flickering as there was in the original image. 
+  
 
   <h5>Frame subtraction</h5>
 
@@ -268,7 +301,7 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
   much better suited to create stylized videos where there is less flickering between frames, as the background/non-moving portions of the frames would be more consistent.
   Unfortunately, due to time constraints and high training times, we could not test this implementation. However, we did work on reducing training times for style models,
   which would have helped us achieve this goal.
-  <br>
+  <br><br>
   <h4>Part 2: Training Time Improvements</h4>
 
   TODO: AUSTEN ADD IN YOUR RESULTS
