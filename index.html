@@ -51,11 +51,11 @@ One or two sentences on the main result you obtained.-->
 Style transfer is a method of transferring the style of an image, like a painting,
 to another image. This is useful for creating new types of computer generated
 artwork, and it can even be used for videos. Our approach focuses on exploring
-and optimizing the actual style transfer for videos, as well as the training of models
+and optimizing the actual style transfer for videos, as well as the inference time of models
 used for style transfer. We have found key areas
 for improvement in the most popular style transfer algorithm currently in use
 (shown in [1]) through our experiments and propose a modified structure for possible better performance, 
-and faster training.
+and faster inference.
 
 <br>
 <br>
@@ -113,9 +113,9 @@ We approached the problem of style transfer by first taking into account what
 currently exists, and then modifying and combining the traits present in each
 method to try and achieve an algorithm better suited for modern, high-quality and
 fast videos. Specifically, we attempted to make the videos created smoother and 
-more pleasing to the eye. Additionally, we wanted to make the styling of images more
-accessible. The largest barrier to this is the sheer time taken for training style models
-as in [1]. We attempted to find ways to speed up this process as well.
+more pleasing to the eye. Additionally, we wanted to implement model compression with two goals in mind.
+The first goal is to simply reduce the size of the model, because the original architecture is a massive 
+150Mb. The second is to use the compressed model to perform faster stylizations.
 <br><br>
 
 <h2><u>Approach</u></h2>
@@ -127,7 +127,7 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
   <h4>Part 1: Smoother Videos</h4>
 
   In order to create smoother videos, we decided to approach the problem using post processing rather than training. This is because the other major problem that we 
-  are attempting to solve is the long training times we have encountered throughout the process. In this vein, there are several method through which we attempted to 
+  are attempting to solve is the long inference times we have encountered throughout the process. In this vein, there are several method through which we attempted to 
   improve the flickering effect of stylizing videos:
   <br><br>
   <ul>
@@ -138,9 +138,14 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
 
   These attempted changes were what we thought had the best chance of success of making the videos smoother, and reduce the flickering effect.
   <br><br>
-  <h4>Part 2: Training Time Improvements</h4>
+  <h4>Part 2: Model Compression</h4>
 
-  TODO: AUSTEN PLEASE WRITE ABOUT WHAT YOUR APPROACH WAS
+  The general idea behind using model compression in this context is to reduce the number of parameters in order to conserve 
+  space and reduce inference speed. There are two main approaches to perform this task, which are using a small-dense network
+  or a large-sparse network. Using the results from [9], which say that a large-sparse network with the same number of parameters 
+  will produce higher accuracy in classification, we decided to go with the approach of introducing sparsity into the network 
+  proposed in [1]. In order to acheieve sparsity, we used tensorflows built-in pruning library, which uses the idea of threshold pruning presented in [9]. Unfortunately, tensorflow does not include a sparse convolution operator, so we used the library in 
+  [10] that references the techniques presented in [11].
 
 
 <br><br>
@@ -286,9 +291,88 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
             
     </ul>
   
-    <h4>Part 2: Training Time Improvements</h4>
+    <h4>Part 2: Model Compression</h4>
 
-    TODO: AUSTEN PLEASE WRITE ABOUT WHAT YOUR RESULTS WERE
+    First we trained a single network, using the approach from above, with 50% sparsity and saved the weights. The next task was 
+    to find a library that would support sparse convolution, which was extremely challenging. We originally wanted the computations 
+    to be performed on CPU, but we were not able to find any that would work on our available machines. As a result,  
+    we ended up using [10], which is only built for GPU's with CUDA support. Next, we tested the previously saved weights in 
+    a network with the architecture from [1] but now replaced all convolution ops with a the new sparse convolution op. 
+    In doing this we found that the there were two errors. The first is issues with memory allocation for larger input images. 
+    The second is that the sparse convolution op is actually slower for smaller filters sizes i.e. the 3x3 ones. Given both of 
+    these issues, we decided to create a hyrbid architecture that used tensorflows built in convolution for all layers except
+    the first and last ones that are 9x9. Next, we trained models with sparsity contraints of 70%, 90%, and 95%. We then gathered 
+    information on the speed of inference by inputting square images ranging form 240x240 to 1440x1440. We calculated these 
+    times by using 20 frames to warmp up the GPU, then perform inference. The following are the results from our test.
+    <br>
+
+    <img style = "width: 100%; height:100%" src= "images/SpeedTest.jpg">
+    <br>
+    As you can see our new hybrid network consistently outperforms tensorflows regular convolution operator. Additionally, 
+    note that the runtime for the dense convolution follows a polynomial path, while the runtime for our hybrid network is 
+    nearly linear. As a result, this new hybrid network could be especially useful for style-transfer in Ultra-HD images.
+    <br>
+    Now that we have shown the runtime results, we will now demonstrate the quality of style-transfer that is obtained from 
+    a sparse network. The following are a few samples of style transfer using our sparse structure and this style image.
+    <br>
+    <div>
+      <img style = "width: 20%; height:100%" src= "images/lionStyle.jpg">
+      <img style = "width: 22.3%; height:100%" src= "images/002.jpg">
+      <img style = "width: 22.5%; height:100%" src= "images/004.jpg">
+      <img style = "width: 26.4%; height:100%" src= "images/006.jpg">
+    </div>
+    <br>
+    <div style = "margin-left : 16.7% ">
+      Dense
+      <img style = "width: 26.7%; height:100%" src= "images/dense002.jpg">
+      <img style = "width: 26.9%; height:100%" src= "images/dense004.jpg">
+      <img style = "width: 31.9%; height:100%" src= "images/dense006.jpg">
+    </div>
+    <br>
+    <div style = "margin-left : 16.7% ">
+      &nbsp 50%
+      <img style = "width: 26.7%; height:100%" src= "images/50-002.jpg">
+      <img style = "width: 26.9%; height:100%" src= "images/50-004.jpg">
+      <img style = "width: 31.9%; height:100%" src= "images/50-006.jpg">
+    </div>
+    <br>
+    <div style = "margin-left : 16.7% ">
+      &nbsp 70%
+      <img style = "width: 26.7%; height:100%" src= "images/70-002.jpg">
+      <img style = "width: 26.9%; height:100%" src= "images/70-004.jpg">
+      <img style = "width: 31.9%; height:100%" src= "images/70-006.jpg">
+    </div>
+    <br>
+    <div style = "margin-left : 16.7% ">
+      &nbsp 90%
+      <img style = "width: 26.7%; height:100%" src= "images/90-002.jpg">
+      <img style = "width: 26.9%; height:100%" src= "images/90-004.jpg">
+      <img style = "width: 31.9%; height:100%" src= "images/90-006.jpg">
+    </div>
+    <br>
+    <div style = "margin-left : 16.7% ">
+      &nbsp 95%
+      <img style = "width: 26.7%; height:100%" src= "images/95-002.jpg">
+      <img style = "width: 26.9%; height:100%" src= "images/95-004.jpg">
+      <img style = "width: 31.9%; height:100%" src= "images/95-006.jpg">
+    </div>
+
+    <br>
+    Before discussing the results, it is important to note that the above images original dimensions are: 
+    Golden Gate Bridge-496 x 331, Stata Building-1024 x 679, and Lion-3840 × 2160, but the training and style image are 
+    256 x 256. In general, the images are stylized quite well even at 95% sparsity. There are really only two main differences. 
+    The first is that the stylization seems to lose the vibrance/variance in color. For example, the lion stylized by the 
+    dense network has very vibrant color range for the lion and a background with lots of different colors, while the lion 
+    stylized by the 95% sparse network has a lion with less color range and a background that is split by two types of colors. 
+    The next difference is the correlation of sparsity and a lack of "swirliness." By "swirliness", we are referring to 
+    how the original style image could be characterized by swirl-like patterns across the image. A good example of the network, 
+    losing this attribute as sparsity increases can be seen in the golden gate bridge sequence, which starts with high 
+    "swirliness" and eventually ends with only slightly curved lines. On a final note, it is interesting to point out that 
+    since all networks were trained on low resolution images, it learns the features in the context of a low image. As a 
+    result, when applied to high resolution images, such as the lion, the style is transferred for each small patch of the 
+    image.
+
+
 <h2><u>Conclusions and Future Work</u></h2>
   <h4>Part 1: Smoother Videos</h4>
 
@@ -299,18 +383,22 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
   the effect of stylization between frames: noise loss. For example, different frames in a video contain only small difference, which can essentially be treated
   as noise. If, during training, we could calculate both the styled image with and without noise, and minimize the loss between those two images, the neural net would be
   much better suited to create stylized videos where there is less flickering between frames, as the background/non-moving portions of the frames would be more consistent.
-  Unfortunately, due to time constraints and high training times, we could not test this implementation. However, we did work on reducing training times for style models,
+  Unfortunately, due to time constraints and high training times, we could not test this implementation. However, we did work on reducing inference times for style models,
   which would have helped us achieve this goal.
   <br><br>
-  <h4>Part 2: Training Time Improvements</h4>
+  <h4>Part 2: Model Compression</h4>
+  The model compression was able to acheive the two goals we wanted, which were reducing space complexity of the model and
+  time complexity of inference. Unfortunately, the time complexity aspect only holds true for a device with a GPU and 
+  CUDA support, which is usually not the case on devices that benefit most from model compression such as phones and 
+  wearables. As a result, our future work would be to implement a sparse convolution op that is supported by CPU or 
+  phone GPU. Additionally, we would like to combine the results from our two parts into one system that could efficiently 
+  compute stable style transfer.
 
-  TODO: AUSTEN ADD IN YOUR RESULTS
+
 <br><br>
 
 
 
-
-<br><br><br>
 
 <hr>
 
@@ -327,15 +415,13 @@ Relevant papers and articles:
   <li>Weinzaepfel et al. <a href="https://hal.inria.fr/hal-00873592/document">DeepFlow: Large displacement optical flow with deep matching</a></li>
   <li>Huang et al. <a href="https://arxiv.org/pdf/1703.06868.pdf" >Arbitrary Style Transfer in Real-time with Adaptive Instance Normalization</a></li>
   <li>Li et al. <a href="https://arxiv.org/pdf/1808.04537v1.pdf">Learning Linear Transformations for Fast Arbitrary Style Transfer</a></li>
+  <li>Zhu et al. <a href="https://arxiv.org/pdf/1710.01878.pdf">Exploring the Efficacy of Pruning for Model Compression</a></li>
+  <li>Hanxiang Hao <a href="https://github.com/Connor323/Convolution-with-sparse-kernel-in-TF">Sparse Convolution Op</a></li>
+  <li>Han et al. <a href="https://arxiv.org/pdf/1506.02626.pdf">Learning both Weights and Connections for Efficient Neural Networks</a></li>
 </ol>
 <br>
 
 
-<!-- When \(a \ne 0\), there are two solutions to \(ax^2 + bx + c = 0\) and they are
-$$x = {-b \pm \sqrt{b^2-4ac} \over 2a}.$$
-<br>
-Experiments and results: Describe the experimental setup you will follow, which datasets you will use, which existing code you will exploit, what you will implement yourself, and what you would define as a success for the project. If you plan on collecting your own data, describe what data collection protocol you will follow. Provide a list of experiments you will perform. Describe what you expect the experiments to reveal, or what is uncertain about the potential outcomes.
- -->
   <hr>
   <footer>
   <p>© Rishab Kaup, Karthik Praturu, Noah Sutter and Austen Schunk</p>
