@@ -299,7 +299,11 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
               <source src="images/fox_flow_blending_and_medFiltering.mp4" type= "video/mp4">
             Your browser does not support the video tag.
             </video>
-            <figcaption>Left: Using only optical flow | Right: Optical flow with blending and median filtering</figcaption>
+            <video width="320" height="200" autoplay loop>
+                <source src="images/fox_control_udnie.mp4" type= "video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <figcaption>Left: Using only optical flow | Middle: Optical flow with blending and median filtering | Right: Original</figcaption>
         </figure>
     </div>
 
@@ -313,6 +317,19 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
     the threshold. Raw optical flow like this does not work, problems are compounded like with frame subtraction, causing a "smearing" effect to appear in the output image.
     However, blending this output with the predicted next frame output from the style transfer network, and passing it
     through a median filter, greatly reduces the smearing effect and achieves slightly smoother results.
+
+    <br><br>
+
+    The "smearing" effect from naively using optical flow is an improvement over using basic frame subtraction. To an extent,
+    the context is being preserved, but by too much, and blending the optical flow thresholded style frame with the regularly
+    predicted style frame improves upon this. We can make this better by weighting pixels that move around more.
+    In essence, instead of globally blending both frames together, on a per-pixel basis, set the value of that pixel to
+    the weighted combination of the regularly predicted style frame pixel and the optical flow thresholded style frame pixel
+    at that location. A pixel location with a large optical flow has a higher weight and blends more of the regularly predicted
+    style frame pixel and less of the optical flow thresholded pixel. Each weight is normalized by the maximum weight, but we also
+    added a penalty (refered to as p in the figure below) that gets mutliplied by the normalized weight before blending.
+    Next, all the normalized-weight-penalties (nwp) are thresholded to be between 0 and 1, and blending is achieved by blending
+    nwp of the regularly predicted style frame pixel with (1-nwp) of the optical flow thresholded pixel.
 
     <div style = "text-align: center">
       <figure>
@@ -328,17 +345,10 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
               <source src="images/fox_flow_penalties_1000Weight.mp4" type= "video/mp4">
             Your browser does not support the video tag.
           </video>
-          <figcaption>Left: Small Penalty | Center: Medium Penalty | Right: Large Penalty</figcaption>
+          <figcaption>Left: Small Penalty (p=200)  | Center: Medium Penalty (p=500) | Right: Large Penalty (p=1000)</figcaption>
       </figure>
     </div>
     <br>
-
-      This result was obtained by increasing the number of frames in the original video through
-       frame interpolation and running the video with extra frames throught the transformation network. The
-       goal was that the extra frames might reduce or smooth the flickering between frames by reducing the difference
-       between frames and making the overall video seem less jumpy.
-       This was successful to a degree. The flickering is smoother as there are smaller changes between frames, however,
-       there is still just as much flickering as there was in the original image.
 
     <h4>Part 2: Model Compression</h4>
 
@@ -424,10 +434,8 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
 
 <h2><u>Conclusions and Future Work</u></h2>
   <h4>Part 1: Smoother Videos</h4>
-
-  As it turns out, none of our experiments were particularly successful. While the frame subtraction had the best chance of success, and had the best results,
-  they did not markedly improve the style transfer for the video. Howver, we did stumble upon a possible plan that could work very well
-  if we had had more time. During training of the neural net, there are three losses that are minimized: Content loss, style loss, and total variance loss. These
+  We had pretty good results regarding generating smoother videos; however, we did stumble upon a possible plan that could work very well
+  if we focused more on the neural network. During training of the neural net, there are three losses that are minimized: Content loss, style loss, and total variance loss. These
   combined are what make the balance between content and style in the produced images. However, with videos, another loss component can be added to try and minimize
   the effect of stylization between frames: noise loss. For example, different frames in a video contain only small difference, which can essentially be treated
   as noise. If, during training, we could calculate both the styled image with and without noise, and minimize the loss between those two images, the neural net would be
