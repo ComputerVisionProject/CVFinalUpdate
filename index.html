@@ -428,8 +428,9 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
 
 <h2><u>Conclusions and Future Work</u></h2>
   <h4>Part 1: Smoother Videos</h4>
-  We had pretty good results regarding generating smoother videos; however, we did stumble upon a possible plan that could work very well
-  if we focused more on the neural network. During training of the neural net, there are three losses that are minimized: Content loss, style loss, and total variance loss. These
+  We had pretty good results regarding generating smoother videos. Optical flow with blending and filtering resulted in much better preservation of the background than
+  just the simple techniques before. However, we did stumble upon a possible plan that could work very well
+  if we focused more on the TRAINING of the neural network. During training of the neural net, there are three losses that are minimized: Content loss, style loss, and total variance loss. These
   combined are what make the balance between content and style in the produced images. However, with videos, another loss component can be added to try and minimize
   the effect of stylization between frames: noise loss. For example, different frames in a video contain only small difference, which can essentially be treated
   as noise. If, during training, we could calculate both the styled image with and without noise, and minimize the loss between those two images, the neural net would be
