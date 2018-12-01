@@ -310,13 +310,13 @@ Tell us what obstacles you faced and how you addressed them. Justify any design
     The experiments above helped us realize what needed to be done to get good, reduced-flickering output videos.
     Getting the difference between frames and adding style to the changed frames was not enough since the context
     of the changed pixels is not conserved: Changing the style of randomly consistent pixels led to undesired popping.
-    Since movement of the camera, fox, and changes in brightness between frames negatively effects the flickering
+    Since movement of the camera, movement of the fox, and changes in brightness between frames negatively affects the flickering
     of the output video, we utilized optical flow, which estimates pixel motion, to achieve better results.
     We did the following as a control: Like with frame subtraction, we took the current frame and the previous frame and compute the optical flow, then use
     the magnitude of the flow to threshold the output image, and only apply style changes to locations that are above
     the threshold. Raw optical flow like this does not work, problems are compounded like with frame subtraction, causing a "smearing" effect to appear in the output image.
     However, blending this output with the predicted next frame output from the style transfer network, and passing it
-    through a median filter, greatly reduces the smearing effect and achieves slightly smoother results.
+    through a median filter, greatly reduces the smearing effect and achieves slightly smoother and less-flickery results.
 
     <br><br>
 
